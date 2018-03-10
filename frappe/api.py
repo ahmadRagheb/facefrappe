@@ -154,9 +154,22 @@ def validate_oauth():
 def is_face_active(usr):
 
     # path = (frappe.get_site_path('public', "shape_predictor_68_face_landmarks.dat"))
+
+    #for face 
     login_encoding_face = frappe.db.get_value("User", str(usr),"login_encoding_face")
-    check_active = frappe.db.get_value("User", str(usr),"face_check")
-    if check_active == 0:
-        return ["False",login_encoding_face]
-    else:
-        return ["True" ,login_encoding_face]
+    #for serial 
+    login_serial = frappe.db.get_value("User", str(usr),"motherboard_serial_number")
+
+    #face_check
+    check_active_face = frappe.db.get_value("User", str(usr),"face_check")
+    #serial_check
+    check_active_serial = frappe.db.get_value("User", str(usr),"serial_check")
+
+    if check_active_face == 0 and check_active_serial == 0:
+        return ["False",login_encoding_face,"False",login_serial]
+    elif check_active_face == 1 and check_active_serial == 0:
+        return ["True" ,login_encoding_face,"False",login_serial]
+    elif check_active_face == 0 and check_active_serial == 1:
+        return ["False" ,login_encoding_face,"True",login_serial]
+    elif check_active_face == 1 and check_active_serial == 1 :
+        return ["True" ,login_encoding_face,"True",login_serial]

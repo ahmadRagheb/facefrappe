@@ -225,9 +225,9 @@ frappe.ui.form.on("User", "face_button", function(frm) {
 
     /* server connection via wevsocket */
 
-    // var ws = new WebSocket("ws://0.0.0.0:9001");
-    console.log(location.hostname);
-    var ws = new WebSocket("wss://"+location.hostname+":9001");    
+    var ws = new WebSocket("ws://0.0.0.0:9001");
+    // console.log(location.hostname);
+    // var ws = new WebSocket("wss://"+location.hostname+":9001");    
 
     ws.onopen = function() {
         console.log("Openened connection to websocket");
@@ -313,5 +313,40 @@ function dataURItoBlob(dataURI) {
         }
 
     }
+
+});
+
+
+//  Motherboard Serial Number Button 
+frappe.ui.form.on("User", "download_app", function(frm) {
+
+ /* server connection via wevsocket */
+
+    var ws = new WebSocket("ws://0.0.0.0:9001");
+
+    ws.onopen = function() {
+        console.log("Openened connection to websocket");
+    }
+
+
+    timer = setInterval( function() { 
+            ws.send("newblob");
+     },3000); 
+
+    /* handel server respond */
+    var target = document.getElementById("target");
+
+    ws.onmessage = function(msg) {
+        console.log(msg)
+        var respons_list  = JSON.parse(msg.data);
+        var value = respons_list[1];
+        console.log(value);
+        value_trimed = value.trim()
+        frm.set_value("motherboard_serial_number", value_trimed);
+        refresh_field("motherboard_serial_number");
+
+    }
+
+    // window.location = "/motherboard/download_app.py";
 
 });

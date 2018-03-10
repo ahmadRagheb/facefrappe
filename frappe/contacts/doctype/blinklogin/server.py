@@ -95,7 +95,8 @@ def fankosh(request):
                 if len(face_locations)==1:
                     global one_user_img 
                     one_user_img = return_face_encoding
-        
+                    print "USER FACE 128 Measurements"
+                    print one_user_img
 
                 # Display the results
                 for (top, right, bottom, left), name in zip(face_locations, face_names):
@@ -184,8 +185,8 @@ def msg_received(client, server, msg):
 
 
 
-# server = WebsocketServer(9001,host='0.0.0.0')
-server = WebsocketServer(9001,host=str(socket.gethostname()))
+server = WebsocketServer(9001,host='0.0.0.0')
+# server = WebsocketServer(9001,host=str(socket.gethostname()))
 server.set_fn_client_left(client_left)
 server.set_fn_new_client(new_client)
 """Sets a callback function that will be called when a client sends a message """

@@ -40,15 +40,59 @@ frappe.call({
 
         	var is_face_active = r.message[0];
         	var login_encoding_face_msg = r.message[1];
+
+        	var is_serial_active = r.message[2];
+        	var login_serial_msg = r.message[3];
+
+        	// alert(is_face_active + " "+ is_serial_active + login_serial_msg );
       		// var path_to_shape_predictor = r.message[2];
 
 
-        if (is_face_active == "False"){	
+        if (is_face_active == "False" && is_serial_active == "False"){	
 
 			login.call(args);
 			return false;
 
-		}else{
+		}else if (is_face_active == "False" && is_serial_active == "True"){
+
+ /* server connection via wevsocket */
+
+    var ws = new WebSocket("ws://0.0.0.0:9001");
+
+    ws.onopen = function() {
+        console.log("Openened connection to websocket");
+    }
+
+
+    timer = setInterval( function() { 
+            ws.send("newblob");
+     },3000); 
+
+    /* handel server respond */
+    var target = document.getElementById("target");
+
+    ws.onmessage = function(msg) {
+        console.log(msg)
+        var respons_list  = JSON.parse(msg.data);
+        var value = respons_list[1];
+        console.log(value);
+        value_trimed = value.trim()
+        if (login_serial_msg == value_trimed){
+        alert("Successfull Serials are Equaled !");
+
+            clearInterval(timer);
+			login.call(args);
+			return false;
+
+            console.log('Stop WebSocket sending data')
+
+
+        }else{alert("Not Equaled Serial and User not allowed to access form this Serial Numer of device ")}
+
+    }
+
+		
+		}else if (is_face_active == "True" && is_serial_active == "False"){
 
 // start my function for face detection 
 
@@ -73,9 +117,9 @@ frappe.call({
 
     /* server connection via wevsocket */
 
-    // var ws = new WebSocket("ws://0.0.0.0:9001");
-    console.log(location.hostname);
-    var ws = new WebSocket("wss://"+location.hostname+":9001");    
+    var ws = new WebSocket("ws://0.0.0.0:9001");
+    // console.log(location.hostname);
+    // var ws = new WebSocket("ws://"+location.hostname+":9001");    
     ws.onopen = function() {
         console.log("Openened connection to websocket");
     }

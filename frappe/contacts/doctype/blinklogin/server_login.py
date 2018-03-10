@@ -45,6 +45,11 @@ from io import BytesIO
 import os
 import scipy.misc
 
+
+import socket
+import datetime
+
+
 clients = {}
 clients_counter={}
 one_user_img=''
@@ -83,7 +88,9 @@ def blink(usr,request,login_encoding_face,client):
     name = 'uni'
 
     # path = (frappe.get_site_path('public', "shape_predictor_68_face_landmarks.dat"))
-    print("[INFO] loading facial landmark predictor...")
+#     print("[INFO] loading facial landmark predictor...")
+    print("[INFO] LOADING HOG AND SVM ...")
+
     detector = dlib.get_frontal_face_detector()
     pp = '/home/ahmad/Desktop/habash/imageprocess/sites/local22/public/shape_predictor_68_face_landmarks.dat'
     predictor = dlib.shape_predictor(str(pp))
@@ -94,8 +101,26 @@ def blink(usr,request,login_encoding_face,client):
     (lStart, lEnd) = face_utils.FACIAL_LANDMARKS_IDXS["left_eye"]
     (rStart, rEnd) = face_utils.FACIAL_LANDMARKS_IDXS["right_eye"]
 
+    (chinStart, chinEnd) = face_utils.FACIAL_LANDMARKS_IDXS["jaw"]
+
+    (left_eyebrowStart, left_eyebrowEnd) = face_utils.FACIAL_LANDMARKS_IDXS["left_eyebrow"]
+
+    (right_eyebrowStart, right_eyebrowEnd) = face_utils.FACIAL_LANDMARKS_IDXS["right_eyebrow"]
+
+    (nose_bridgeStart, nose_bridgeEnd) = face_utils.FACIAL_LANDMARKS_IDXS["nose"]
+
+    # (nose_tipStart, nose_tipEnd) = face_utils.FACIAL_LANDMARKS_IDXS["nose_tip"]
+
+    (top_lipStart, top_lipEnd) = face_utils.FACIAL_LANDMARKS_IDXS["mouth"]
+
+    # (bottom_lipStart, bottom_lipEnd) = face_utils.FACIAL_LANDMARKS_IDXS["bottom_lip"]
+    
+
+
+
+
     # start the video stream thread
-    print("[INFO] starting video stream thread...")
+    # print("[INFO] starting video stream thread...")
     from binascii import a2b_base64
 
     strOne = 'b'+request
@@ -111,7 +136,7 @@ def blink(usr,request,login_encoding_face,client):
     image=request
     s = StringIO()
     s.write(image)
-    print s.tell()
+    # print s.tell()
 
     size_of_ob = s.tell()
     if (size_of_ob > 0 ):
@@ -138,11 +163,17 @@ def blink(usr,request,login_encoding_face,client):
                 face_names = []
 
                 for face_encoding in face_encodings:
+                    print("[INFO] loading facial landmark predictor...")
+                    print("[INFO] Check Eye Movement ...")
+                    print("[INFO] Extract Face 128 Mesasurments  ...")
+                    print("[INFO] Compare with 128 Mesasurments stored in database ...")
+
                     match = face_recognition.compare_faces([obama_face_encoding], face_encoding)
                     name = "Unknown"
 
-                    if match[0]:
-                        name = str(usr)
+                    # write user name activate the two lines under
+                    # if match[0]:
+                    #     name = str(usr)
 
                     face_names.append(name)
 
@@ -166,7 +197,8 @@ def blink(usr,request,login_encoding_face,client):
                     cv2.putText(arr, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
                     
                     # Display the resulting image
-                    if name == str(usr):
+                    # if name == str(usr):
+                    if name == "Unknown":
 
                         for rect in rects:
                             # determine the facial landmarks for the face region, then
@@ -179,6 +211,24 @@ def blink(usr,request,login_encoding_face,client):
                             # coordinates to compute the eye aspect ratio for both eyes
                             leftEye = shape[lStart:lEnd]
                             rightEye = shape[rStart:rEnd]
+                            
+                            chin = shape[chinStart:chinEnd]
+                            
+                            left_eyebrow = shape[left_eyebrowStart:left_eyebrowEnd]
+
+                            right_eyebrow= shape[right_eyebrowStart:right_eyebrowEnd]
+
+                            nose_bridge = shape[nose_bridgeStart:nose_bridgeEnd]
+
+                            # nose_tip = shape[nose_tipStart:nose_tipEnd]
+
+                            top_lip = shape[top_lipStart:top_lipEnd]
+
+                            # bottom_lip = shape[bottom_lipStart:bottom_lipEnd]
+
+
+
+
                             leftEAR = eye_aspect_ratio(leftEye)
                             rightEAR = eye_aspect_ratio(rightEye)
 
@@ -189,8 +239,27 @@ def blink(usr,request,login_encoding_face,client):
                             # visualize each of the eyes
                             leftEyeHull = cv2.convexHull(leftEye)
                             rightEyeHull = cv2.convexHull(rightEye)
+                            chinHull = cv2.convexHull(chin)
+                            left_eyebrowHull = cv2.convexHull(left_eyebrow)
+                            right_eyebrowHull = cv2.convexHull(right_eyebrow)
+                            nose_bridgeHull = cv2.convexHull(nose_bridge)
+                            # nose_tipHull = cv2.convexHull(nose_tip)
+                            top_lipHull = cv2.convexHull(top_lip)
+                            # bottom_lipHull = cv2.convexHull(bottom_lip)
+
                             cv2.drawContours(arr, [leftEyeHull], -1, (0, 255, 0), 1)
                             cv2.drawContours(arr, [rightEyeHull], -1, (0, 255, 0), 1)
+
+                            cv2.drawContours(arr, [chinHull], -1, (0, 255, 0), 1)
+
+                            cv2.drawContours(arr, [left_eyebrowHull], -1, (0, 255, 0), 1)
+                            cv2.drawContours(arr, [right_eyebrowHull], -1, (0, 255, 0), 1)
+
+                            cv2.drawContours(arr, [nose_bridgeHull], -1, (0, 255, 0), 1)
+                            # cv2.drawContours(arr, [nose_tipHull], -1, (0, 255, 0), 1)
+
+                            cv2.drawContours(arr, [top_lipHull], -1, (0, 255, 0), 1)
+                            # cv2.drawContours(arr, [bottom_lipHull], -1, (0, 255, 0), 1)
 
                             # check to see if the eye aspect ratio is below the blink
                             # threshold, and if so, increment the blink frame counter
@@ -200,7 +269,7 @@ def blink(usr,request,login_encoding_face,client):
                             if ear < EYE_AR_THRESH:
                                 clients_counter[client['id']]["COUNTER"] += 1
 
-                                print str(clients_counter[client['id']]["COUNTER"])
+                                # print str(clients_counter[client['id']]["COUNTER"])
                             # otherwise, the eye aspect ratio is not below the blink
                             # threshold
                             else:
@@ -224,6 +293,7 @@ def blink(usr,request,login_encoding_face,client):
                 imw = Image.fromarray(arr.astype("uint8"))
                 rawBytes = io.BytesIO()
                 imw.save(rawBytes, "PNG")
+
                 rawBytes.seek(0)  # return to the start of the file
 
                 return [str(base64.b64encode(rawBytes.read())),clients_counter[client['id']]["TOTAL"] ]
@@ -321,14 +391,22 @@ def msg_received(client, server, msg):
 
 
                         else:
+                        	# Time Counter
+                            print("################# Start Time ####################")
+                            print(datetime.datetime.now())
                             processed_image = blink(username,img_data,login_encoding_face,client)
-                            
-                            if processed_image[1] >=1:
+
+                            if processed_image[1] >=2:
                                 json_mylist = json.dumps(["SUCCESS",processed_image[0]])
                                 server.send_message(cl, json_mylist)
                             else:
                                 json_mylist = json.dumps(["Live",processed_image[0]])
                                 server.send_message(cl, json_mylist)
+
+                            # End Time 
+                            print(datetime.datetime.now())
+                            print("################# End Time ####################")
+
 
 
                 except Exception as e:
@@ -338,6 +416,8 @@ def msg_received(client, server, msg):
 
 
 server = WebsocketServer(9001,host='0.0.0.0')
+# server = WebsocketServer(9001,host=str(socket.gethostname()))
+
 server.set_fn_client_left(client_left)
 server.set_fn_new_client(new_client)
 """Sets a callback function that will be called when a client sends a message """
